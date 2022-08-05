@@ -152,7 +152,7 @@ connectionSpecification:
                 description: >-
                   If true, this value is required to exist within each Fauna document. If the path
                   doesn't exist in a document the sync fails.
-                  If false, then non-existent documents will store <code>null</code>.
+                  If false, then non-existent field values store <code>null</code>.
         page_size:
           order: 4
           type: integer
@@ -160,8 +160,8 @@ connectionSpecification:
           default: 64
           description: >-
             The page size used when reading documents from the database. The larger the
-            page size, the faster the connector processes documents. However, if a page is too large,
-            the connector may fail.
+            page size, the faster the connector processes documents. However, if a
+            page is too large, the connector may fail.
             <br>
 
             Choose your page size based on how large the documents are.
