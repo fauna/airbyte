@@ -51,7 +51,7 @@ connectionSpecification:
           order: 0
           type: string
           title: Collection Name
-          description: The name of the collection this connector will read from.
+          description: The name of the collection this connector should read from.
         index:
           title: Incremental Sync Index
           type: string
@@ -72,9 +72,9 @@ connectionSpecification:
           type: array
           title: Additional Columns
           description: >-
-            These fields will be added as columns in the destination database.<br>
+            These fields are added as columns in the destination database.<br>
 
-            This can be used in addition to or in place of the data column if you
+            This can be used in addition to, or in place of, the data column if you
             would like to map certain document fields into columns, e.g.
             ["data", "customer", "address"] or ["ttl"].<br>
           items:
@@ -103,7 +103,7 @@ connectionSpecification:
                   Numerical values cannot be entered. It is not possible to index into an
                   array using this path.<br>
 
-                  This path is the same as a <a href="https://docs.fauna.com/fauna/current/api/fql/functions/select?lang=javascript">select call</a>.
+                  This path is the same as a <a href="https://docs.fauna.com/fauna/current/api/fql/functions/select"><code>Select</code> call</a>.
                 items:
                   type: string
               type:
@@ -135,9 +135,9 @@ connectionSpecification:
                 title: Required
                 default: true
                 description: >-
-                  If true, then this value is required to exist within each Fauna document. If the path
-                  doesn't exist in a document the sync will fail.
-                  If false, then non-existent documents will place null in that column.
+                  If true, this value is required to exist within each Fauna document. If the path
+                  doesn't exist in a document the sync fails.
+                  If false, then non-existent documents will store <code>null</code>.
         page_size:
           order: 4
           type: integer
@@ -145,7 +145,7 @@ connectionSpecification:
           default: 64
           description: >-
             The page size used when reading documents from the database. The larger the
-            page size, the faster the connector will run. However, if a page is too large,
+            page size, the faster the connector processes documents. However, if a page is too large,
             the connector may fail.
             <br>
 
@@ -161,12 +161,12 @@ connectionSpecification:
             <b>This only applies to incremental syncs.</b>
             <br>
 
-            Enabling deletion mode will inform your destination of deleted documents.<br>
+            Enabling deletion mode informs your destination of deleted documents.<br>
 
             Disabled - Leave this feature disabled, and ignore deleted documents.<br>
 
             Enabled - Enables this feature. When a document is deleted, the connector
-            will export a record with a "deleted at" column containing the time the
+            exports a record with a "deleted at" column containing the time that the
             document was deleted.
           oneOf:
             - title: Disabled
