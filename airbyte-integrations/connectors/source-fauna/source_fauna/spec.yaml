@@ -76,7 +76,7 @@ connectionSpecification:
 
             This can be used in addition to, or in place of, the data column if you
             would like to map certain document fields into columns, e.g.
-            ["data", "customer", "address"] or ["ttl"].<br>
+            <code>["data", "customer", "address"]</code> or <code>["ttl"]</code>.<br>
           items:
             type: object
             required:
