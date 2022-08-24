@@ -101,25 +101,9 @@ def expand_column_query(conf: CollectionConfig, value):
     obj = {
         "ref": q.select(["ref", "id"], doc),
         "ts": q.select("ts", doc),
+        "data": q.select("data", doc),
+        "ttl": q.select("ttl", doc),
     }
-    if conf.data_column:
-        obj["data"] = q.select("data", doc)
-    for column in conf.additional_columns:
-        if column.required:
-            obj[column.name] = q.select(
-                column.path,
-                doc,
-                q.abort(
-                    q.format(
-                        f"The path {column.path} does not exist in document Ref(%s, collection=%s)",
-                        q.select(["ref", "id"], doc),
-                        q.select(["ref", "collection", "id"], doc),
-                    )
-                ),
-            )
-        else:
-            # If not required, default to None
-            obj[column.name] = q.select(column.path, doc, None)
     return q.let(
         {"document": q.get(value)},
         obj,
@@ -247,57 +231,49 @@ class SourceFauna(Source):
         streams = []
 
         try:
+            self._setup_client(config)
+
             # Check if we entered an index. This will already be validated by check().
             can_sync_incremental = config.collection.index != ""
 
-            # We only support a single stream. This is limiting, but makes things a lot simpler.
-            conf = config.collection
-            stream_name = conf.name
-            properties = {
-                "ref": {
-                    "type": "string",
-                },
-                "ts": {
-                    "type": "integer",
-                },
-            }
-            if conf.data_column:
-                properties["data"] = {"type": "object"}
-            for column in conf.additional_columns:
-                column_object = {}
-
-                # This is how we specify optionals, according to the docs:
-                # https://docs.airbyte.com/understanding-airbyte/supported-data-types/#nulls
-                if column.required:
-                    column_object["type"] = column.type
+            page = self.client.query(q.paginate(q.collections()))
+            while True:
+                for collection in page["data"]:
+                    stream_name = collection.id()
+                    json_schema = {
+                        "$schema": "http://json-schema.org/draft-07/schema#",
+                        "type": "object",
+                        "properties": {
+                            "ref": {
+                                "type": "string",
+                            },
+                            "ts": {
+                                "type": "integer",
+                            },
+                            "data": {
+                                "type": "object",
+                            },
+                            "ttl": {
+                                "type": "integer",
+                            },
+                        },
+                    }
+                    supported_sync_modes = ["full_refresh"]
+                    if can_sync_incremental:
+                        supported_sync_modes.append("incremental")
+                    streams.append(
+                        AirbyteStream(
+                            name=stream_name,
+                            json_schema=json_schema,
+                            supported_sync_modes=supported_sync_modes,
+                            source_defined_cursor=True,
+                            default_cursor_field=["ts"],
+                        )
+                    )
+                if "after" in page:
+                    page = self.client.query(q.paginate(q.collections(), after=page["after"]))
                 else:
-                    column_object["type"] = ["null", column.type]
-
-                # Extra fields, for more formats. See the docs:
-                # https://docs.airbyte.com/understanding-airbyte/supported-data-types/
-                if column.format is not None:
-                    column_object["format"] = column.format
-                if column.airbyte_type is not None:
-                    column_object["airbyte_type"] = column.airbyte_type
-
-                properties[column.name] = column_object
-            json_schema = {
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "type": "object",
-                "properties": properties,
-            }
-            supported_sync_modes = ["full_refresh"]
-            if can_sync_incremental:
-                supported_sync_modes.append("incremental")
-            streams.append(
-                AirbyteStream(
-                    name=stream_name,
-                    json_schema=json_schema,
-                    supported_sync_modes=supported_sync_modes,
-                    source_defined_cursor=True,
-                    default_cursor_field=["ts"],
-                )
-            )
+                    break
         except Exception as e:
             logger.error(f"error in discover: {e}")
             return AirbyteCatalog(streams=[])
