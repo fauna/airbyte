@@ -252,7 +252,6 @@ class SourceFauna(Source):
                 else:
                     break
 
-
             page = self.client.query(q.paginate(q.collections()))
             while True:
                 for collection in page["data"]:
