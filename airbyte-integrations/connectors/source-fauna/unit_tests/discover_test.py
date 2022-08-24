@@ -80,7 +80,7 @@ def test_simple_discover():
                         "type": "integer",
                     },
                     "ttl": {
-                        "type": "integer",
+                        "type": ["null", "integer"],
                     },
                 },
             },

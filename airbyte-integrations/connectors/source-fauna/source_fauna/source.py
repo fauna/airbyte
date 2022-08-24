@@ -265,7 +265,7 @@ class SourceFauna(Source):
                                 "type": "object",
                             },
                             "ttl": {
-                                "type": "integer",
+                                "type": ["null", "integer"],
                             },
                         },
                     }
