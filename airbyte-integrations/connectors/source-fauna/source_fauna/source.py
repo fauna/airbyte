@@ -78,7 +78,7 @@ def expand_column_query(conf: CollectionConfig, value):
     obj = {
         "ref": q.select(["ref", "id"], doc),
         "ts": q.select("ts", doc),
-        "data": q.select("data", doc),
+        "data": q.select("data", doc, None),
         "ttl": q.select("ttl", doc, None),
     }
     return q.let(
