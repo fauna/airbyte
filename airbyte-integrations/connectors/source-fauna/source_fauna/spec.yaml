@@ -47,17 +47,6 @@ connectionSpecification:
         - page_size
         - deletions
       properties:
-        name:
-          order: 0
-          type: string
-          title: Collection Name
-          description: The name of the collection this connector should read from.
-        index:
-          title: Incremental Sync Index
-          type: string
-          order: 1
-          description: >-
-            This is required for incremental syncs. Leave blank for full syncs.
         page_size:
           order: 4
           type: integer

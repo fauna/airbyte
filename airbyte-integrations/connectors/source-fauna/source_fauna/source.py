@@ -47,8 +47,6 @@ class Config:
 
 class CollectionConfig:
     def __init__(self, conf):
-        # Name of the collection we are reading from.
-        self.name = conf["name"]
         # The page size, used in all Paginate() calls.
         self.page_size = conf["page_size"]
 
