@@ -107,7 +107,7 @@ def expand_columns_query(ref):
         {
             "ref": q.select(["ref", "id"], doc),
             "ts": q.select("ts", doc),
-            "data": q.select("data", doc, None),
+            "data": q.select("data", doc, {}),
             "ttl": q.select("ttl", doc, None),
         },
     )

@@ -121,7 +121,7 @@ def test_read_all_extra_columns():
             {
                 "ref": q.select(["ref", "id"], doc),
                 "ts": q.select("ts", doc),
-                "data": q.select("data", doc, None),
+                "data": q.select("data", doc, {}),
                 "ttl": q.select("ttl", doc, None),
             },
         )
