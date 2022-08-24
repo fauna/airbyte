@@ -51,8 +51,6 @@ class CollectionConfig:
         self.name = conf["name"]
         # The page size, used in all Paginate() calls.
         self.page_size = conf["page_size"]
-        # Index name used in read_updates. Default to empty string
-        self.index = conf.get("index", "")
 
         # Configs for how deletions are handled
         self.deletions = DeletionsConfig(conf["deletions"])
@@ -81,7 +79,7 @@ def expand_column_query(conf: CollectionConfig, value):
         "ref": q.select(["ref", "id"], doc),
         "ts": q.select("ts", doc),
         "data": q.select("data", doc),
-        "ttl": q.select("ttl", doc),
+        "ttl": q.select("ttl", doc, None),
     }
     return q.let(
         {"document": q.get(value)},
@@ -170,6 +168,36 @@ class SourceFauna(Source):
 
         # All above checks passed, so it's valid.
         return None
+
+    def find_index_for_stream(self, collection: str) -> str:
+        # It's all bad
+        page = self.client.query(q.paginate(q.indexes()))
+        while True:
+            for id in page["data"]:
+                try:
+                    index = self.client.query(q.get(id))
+                except Unauthorized:
+                    # If we don't have permissions to read this index, we ignore it.
+                    continue
+                source = index["source"]
+                # Source can be an array, in which case we want to skip this index
+                if (
+                    type(source) is Ref
+                    and source.collection() == Ref("collections")
+                    and source.id() == collection
+                    # Index must have 2 values and no terms
+                    and len(index["values"]) == 2
+                    and len(index["terms"]) == 0
+                    # Index values must be ts and ref
+                    and index["values"][0] == {"field": "ts"}
+                    and index["values"][1] == {"field": "ref"}
+                ):
+                    return index["name"]
+            if "after" in page:
+                page = self.client.query(q.paginate(q.indexes(), after=page["after"]))
+            else:
+                break
+        raise Error(f"Could not find index for stream '{collection}'")
 
     def discover(self, logger: AirbyteLogger, config: json) -> AirbyteCatalog:
         """
@@ -616,6 +644,7 @@ class SourceFauna(Source):
                     if stream_name not in state:
                         state[stream_name] = {}
 
+                    index = self.find_index_for_stream(stream_name)
                     read_deletions = config.collection.deletions.mode == "deleted_field"
 
                     # Read removals
@@ -640,7 +669,7 @@ class SourceFauna(Source):
                         stream,
                         config.collection,
                         state[stream_name]["updates_cursor"],
-                        config.collection.index,
+                        index,
                         config.collection.page_size,
                     ):
                         yield make_message(stream_name, data_obj)
