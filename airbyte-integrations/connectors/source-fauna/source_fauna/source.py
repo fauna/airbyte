@@ -233,8 +233,25 @@ class SourceFauna(Source):
         try:
             self._setup_client(config)
 
-            # Check if we entered an index. This will already be validated by check().
-            can_sync_incremental = config.collection.index != ""
+            # Map all the indexes with the correct values to their collection.
+            collections_to_indexes = {}
+            page = self.client.query(q.paginate(q.indexes()))
+            while True:
+                for id in page["data"]:
+                    try:
+                        index = self.client.query(q.get(id))
+                    except Unauthorized:
+                        # If we don't have permissions to read this index, we ignore it.
+                        continue
+                    source = index["source"]
+                    # Source can be an array, in which case we want to skip this index
+                    if type(source) is Ref and source.collection() == Ref("collections"):
+                        collections_to_indexes[source.id()] = index
+                if "after" in page:
+                    page = self.client.query(q.paginate(q.indexes(), after=page["after"]))
+                else:
+                    break
+
 
             page = self.client.query(q.paginate(q.collections()))
             while True:
@@ -259,7 +276,7 @@ class SourceFauna(Source):
                         },
                     }
                     supported_sync_modes = ["full_refresh"]
-                    if can_sync_incremental:
+                    if stream_name in collections_to_indexes:
                         supported_sync_modes.append("incremental")
                     streams.append(
                         AirbyteStream(
