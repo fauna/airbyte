@@ -4,7 +4,7 @@
 
 from unittest.mock import MagicMock, Mock
 
-from airbyte_cdk.models import AirbyteCatalog, AirbyteStream, SyncMode
+from airbyte_cdk.models import AirbyteStream
 from faunadb import query as q
 from faunadb.objects import Ref
 from source_fauna import SourceFauna
