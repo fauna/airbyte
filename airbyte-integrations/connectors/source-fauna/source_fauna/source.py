@@ -245,7 +245,16 @@ class SourceFauna(Source):
                         continue
                     source = index["source"]
                     # Source can be an array, in which case we want to skip this index
-                    if type(source) is Ref and source.collection() == Ref("collections"):
+                    if (
+                        type(source) is Ref
+                        and source.collection() == Ref("collections")
+                        # Index must have 2 values and no terms
+                        and len(index["values"]) == 2
+                        and len(index["terms"]) == 0
+                        # Index values must be ts and ref
+                        and index["values"][0] == {"field": "ts"}
+                        and index["values"][1] == {"field": "ref"}
+                    ):
                         collections_to_indexes[source.id()] = index
                 if "after" in page:
                     page = self.client.query(q.paginate(q.indexes(), after=page["after"]))
