@@ -197,7 +197,7 @@ class SourceFauna(Source):
                 page = self.client.query(q.paginate(q.indexes(), after=page["after"]))
             else:
                 break
-        raise Error(f"Could not find index for stream '{collection}'")
+        raise ValueError(f"Could not find index for stream '{collection}'")
 
     def discover(self, logger: AirbyteLogger, config: json) -> AirbyteCatalog:
         """
@@ -645,6 +645,7 @@ class SourceFauna(Source):
                         state[stream_name] = {}
 
                     index = self.find_index_for_stream(stream_name)
+                    logger.info(f"found index '{index}', which will be used to sync '{stream_name}'")
                     read_deletions = config.collection.deletions.mode == "deleted_field"
 
                     # Read removals
