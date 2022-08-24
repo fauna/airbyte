@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, Mock
 
 from airbyte_cdk.models import Status
 from faunadb import query as q
-from faunadb.errors import FaunaError, Unauthorized
+from faunadb.errors import Unauthorized
 from faunadb.objects import Ref
 from source_fauna import SourceFauna
 from test_util import config, mock_logger
