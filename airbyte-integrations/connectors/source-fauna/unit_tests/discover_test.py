@@ -4,18 +4,7 @@
 
 from unittest.mock import MagicMock, Mock
 
-from airbyte_cdk.models import (
-    AirbyteCatalog,
-    AirbyteMessage,
-    AirbyteRecordMessage,
-    AirbyteStateMessage,
-    AirbyteStream,
-    Status,
-    SyncMode,
-    Type,
-)
-from faunadb import query as q
-from faunadb.objects import Ref
+from airbyte_cdk.models import AirbyteCatalog, AirbyteStream, SyncMode
 from source_fauna import SourceFauna
 from test_util import config, mock_logger
 

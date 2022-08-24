@@ -4,9 +4,8 @@
 
 
 import json
-import os
 import time
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Dict, Generator, Optional
 
 from airbyte_cdk.logger import AirbyteLogger
@@ -16,9 +15,7 @@ from airbyte_cdk.models import (
     AirbyteMessage,
     AirbyteRecordMessage,
     AirbyteStateMessage,
-    AirbyteStateType,
     AirbyteStream,
-    AirbyteStreamState,
     ConfiguredAirbyteCatalog,
     ConfiguredAirbyteStream,
     Status,
@@ -30,7 +27,7 @@ from faunadb import _json
 from faunadb import query as q
 from faunadb.client import FaunaClient
 from faunadb.errors import FaunaError, Unauthorized
-from faunadb.objects import FaunaTime, Ref
+from faunadb.objects import Ref
 from source_fauna.serialize import fauna_doc_to_airbyte
 
 
@@ -196,7 +193,7 @@ class SourceFauna(Source):
             # If they entered an index, make sure it's correct
             if conf.index != "":
                 res = self._validate_index(conf.name, conf.index)
-                if res != None:
+                if res is not None:
                     return fail(res)
 
             return AirbyteConnectionStatus(status=Status.SUCCEEDED)
@@ -443,7 +440,6 @@ class SourceFauna(Source):
         stream_name = stream.stream.name
         logger.info(f"reading document updates for stream {stream_name}")
 
-        cursor = state.get("ts", 0)
         if "after" in state:
             # If the last query failed, we will have stored the after token used there, so we can
             # resume more reliably.
@@ -538,7 +534,7 @@ class SourceFauna(Source):
             after = _json.parse_json(after)
             logger.info(f"using after token {after}")
         else:
-            logger.info(f"no after token, starting from beginning")
+            logger.info("no after token, starting from beginning")
 
         ts = state["full_sync_cursor"]["ts"]
 
@@ -560,7 +556,6 @@ class SourceFauna(Source):
                 )
             )
         )
-        last_after_token = None
         while True:
             yield from all_documents["data"]
             if "after" in all_documents:
@@ -621,10 +616,8 @@ class SourceFauna(Source):
         try:
             self._setup_client(config)
 
-            streams = []
             for stream in catalog.streams:
                 stream_name = stream.stream.name
-                page_size = config.collection.page_size
                 if stream.sync_mode == SyncMode.full_refresh:
                     logger.info(f"syncing stream '{stream_name}' with full_refresh")
 

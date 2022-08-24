@@ -4,13 +4,10 @@
 
 from unittest.mock import MagicMock, Mock
 
-from airbyte_cdk.logger import AirbyteLogger
-from airbyte_cdk.models import AirbyteStream, Status
 from faunadb import _json
 from faunadb import query as q
-from faunadb.objects import Ref
 from source_fauna import SourceFauna
-from test_util import CollectionConfig, Column, config, expand_columns_query, mock_logger, ref
+from test_util import CollectionConfig, Column, expand_columns_query, mock_logger
 
 
 def results(modified, after):
@@ -129,7 +126,7 @@ def test_read_all_extra_columns():
                     doc,
                     q.abort(
                         q.format(
-                            f"The path ['data', 'my_field'] does not exist in document Ref(%s, collection=%s)",
+                            "The path ['data', 'my_field'] does not exist in document Ref(%s, collection=%s)",
                             q.select(["ref", "id"], doc),
                             q.select(["ref", "collection", "id"], doc),
                         )
@@ -141,7 +138,6 @@ def test_read_all_extra_columns():
 
     TS = 12342134
     PAGE_SIZE = 12344315
-    FIRST_AFTER_TOKEN = ["some magical", 3, "data"]
 
     current_query = 0
     QUERIES = [

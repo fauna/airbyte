@@ -4,8 +4,7 @@
 
 from unittest.mock import MagicMock, Mock
 
-from airbyte_cdk.logger import AirbyteLogger
-from airbyte_cdk.models import AirbyteStream, Status
+from airbyte_cdk.models import Status
 from faunadb import query as q
 from faunadb.errors import FaunaError, Unauthorized
 from faunadb.objects import Ref

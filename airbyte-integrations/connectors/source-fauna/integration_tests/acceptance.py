@@ -4,7 +4,6 @@
 
 
 import pytest
-from source_fauna import SourceFauna
 
 pytest_plugins = ("source_acceptance_test.plugin",)
 

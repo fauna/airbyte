@@ -3,7 +3,7 @@
 #
 
 from typing import List
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 from faunadb import query as q
 from faunadb.objects import Ref

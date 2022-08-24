@@ -2,10 +2,9 @@
 # Copyright (c) 2022 Airbyte, Inc., all rights reserved.
 #
 
-from datetime import date, datetime
+from datetime import date
 
 from faunadb.objects import FaunaTime, Ref
-from faunadb.query import collection, credentials, database, index, keys, tokens
 from source_fauna.serialize import _fauna_value_to_airbyte
 
 

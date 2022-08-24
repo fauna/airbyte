@@ -2,9 +2,8 @@
 # Copyright (c) 2022 Airbyte, Inc., all rights reserved.
 #
 
-import time
 from datetime import datetime, timezone
-from typing import Dict, Generator, Optional
+from typing import Dict, Generator
 from unittest.mock import MagicMock, Mock
 
 from airbyte_cdk.models import (
@@ -20,7 +19,6 @@ from airbyte_cdk.models import (
 )
 from faunadb import _json
 from faunadb import query as q
-from faunadb.objects import FaunaTime
 from source_fauna import SourceFauna
 from test_util import CollectionConfig, config, expand_columns_query, mock_logger, ref
 
@@ -153,13 +151,6 @@ def test_read_no_updates_or_creates_but_removes_present():
     assert not logger.error.called
 
 
-def results(modified, after):
-    modified_obj = {"data": modified}
-    if after is not None:
-        modified_obj["after"] = after
-    return modified_obj
-
-
 # Test to make sure read() calls read_updates() correctly.
 def test_read_updates_ignore_deletes():
     was_called = False
@@ -266,19 +257,10 @@ def test_read_updates_ignore_deletes():
     assert not logger.error.called
 
 
-def results(modified, after):
-    modified_obj = {"data": modified}
-    if after is not None:
-        modified_obj["after"] = after
-    return modified_obj
-
-
 # After a failure, the source should emit the state, which we should pass back in,
 # and then it should resume correctly.
 def test_read_removes_resume_from_partial_failure():
-    TS = 12342134
     PAGE_SIZE = 12344315
-    INDEX = "foo_ts"
     FIRST_AFTER_TOKEN = ["some magical", 3, "data"]
     SECOND_AFTER_TOKEN = ["even more magical", 3, "data"]
 
@@ -442,7 +424,6 @@ def test_read_remove_deletions():
     # This is a timestamp in microseconds sync epoch
     TS = DATE.timestamp() * 1_000_000
     PAGE_SIZE = 12344315
-    INDEX = "foo_ts"
 
     def make_query(after):
         return q.map_(
@@ -579,7 +560,6 @@ def test_read_updates_query():
     Validates that read_updates() queries the database correctly.
     """
 
-    TS = 12342134
     PAGE_SIZE = 12344315
     INDEX = "my_index_name"
     FIRST_AFTER_TOKEN = ["some magical", 3, "data"]
@@ -768,7 +748,6 @@ def test_read_updates_resume():
     a failed query correctly.
     """
 
-    TS = 12342134
     PAGE_SIZE = 12344315
     INDEX = "my_index_name"
     FIRST_AFTER_TOKEN = ["some magical", 3, "data"]

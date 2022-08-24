@@ -155,7 +155,7 @@ def setup_container():
         )
         db_data = setup_database(source)
         return container, db_data, source
-    except Exception as e:
+    except Exception:
         stop_container(container)
         raise
 
@@ -347,7 +347,7 @@ def run_general_remove_test(source: SourceFauna, logger):
 
     assert documents[1]["ref"] == "103"
     assert documents[1]["ts"] > db_data[2]["ts"]
-    assert not "data" in documents[1]
+    assert "data" not in documents[1]
     assert datetime.fromisoformat(documents[1]["deleted_at"]).timestamp() * 1_000_000 > db_data[2]["ts"]
 
     print("=== check: make sure we don't produce more deleted documents when nothing changed")
@@ -498,7 +498,6 @@ def run_test(db_data, source: SourceFauna):
 def test_incremental_reads():
     container, db_data, source = setup_container()
 
-    error = None
     try:
         run_test(db_data, source)
     except Exception as e:
