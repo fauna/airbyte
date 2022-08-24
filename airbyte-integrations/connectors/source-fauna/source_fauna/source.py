@@ -49,10 +49,6 @@ class CollectionConfig:
     def __init__(self, conf):
         # Name of the collection we are reading from.
         self.name = conf["name"]
-        # true or false; do we add a `data` column that mirrors all the data in each document?
-        self.data_column = conf["data_column"]
-        # Any additional columns the user wants.
-        self.additional_columns = [Column(x) for x in conf.get("additional_columns", [])]
         # The page size, used in all Paginate() calls.
         self.page_size = conf["page_size"]
         # Index name used in read_updates. Default to empty string
@@ -60,23 +56,6 @@ class CollectionConfig:
 
         # Configs for how deletions are handled
         self.deletions = DeletionsConfig(conf["deletions"])
-
-
-class Column:
-    def __init__(self, conf):
-        # The name of this column. This is the name that will appear in the destination.
-        self.name = conf["name"]
-        # The path of the value within fauna. This is an array of strings.
-        self.path = conf["path"]
-        # The type of the value used in Airbyte. This will be used by most destinations
-        # as the column type. This is not validated at all!
-        self.type = conf["type"]
-        # If true, then the path above must exist in every document.
-        self.required = conf["required"]
-        # The format and airbyte_type are extra typing fields. Documentation:
-        # https://docs.airbyte.com/understanding-airbyte/supported-data-types/
-        self.format = conf.get("format")
-        self.airbyte_type = conf.get("airbyte_type")
 
 
 class DeletionsConfig:
@@ -142,23 +121,7 @@ class SourceFauna(Source):
         try:
             self._setup_client(config)
 
-            # STEP 1: Validate as much as we can before connecting to the database
-
-            # Collection config, which has all collection-specific config fields.
-            conf = config.collection
-
-            # Make sure they didn't choose an duplicate or invalid column names.
-            column_names = {}
-            for column in conf.additional_columns:
-                # We never allow a custom `data` column, as they might want to enable the
-                # data column later.
-                if column.name == "data" or column.name == "ref" or column.name == "ts":
-                    return fail(f"Additional column cannot have reserved name '{column.name}'")
-                if column.name in column_names:
-                    return fail(f"Additional column cannot have duplicate name '{column.name}'")
-                column_names[column.name] = ()
-
-            # STEP 2: Validate everything else after making sure the database is up.
+            # Validate everything else after making sure the database is up.
             try:
                 self.client.query(q.now())
             except Exception as e:
@@ -167,18 +130,15 @@ class SourceFauna(Source):
                 else:
                     return fail(f"Failed to connect to database: {e}")
 
-            # Validate the collection exists
-            collection = conf.name
+            # Validate our permissions
             try:
-                self.client.query(q.paginate(q.documents(q.collection(collection)), size=1))
+                self.client.query(q.paginate(q.collections()))
             except FaunaError:
-                return fail(f"Collection '{collection}' does not exist")
-
-            # If they entered an index, make sure it's correct
-            if conf.index != "":
-                res = self._validate_index(conf.name, conf.index)
-                if res is not None:
-                    return fail(res)
+                return fail("No permissions to list collections")
+            try:
+                self.client.query(q.paginate(q.indexes()))
+            except FaunaError:
+                return fail("No permissions to list indexes")
 
             return AirbyteConnectionStatus(status=Status.SUCCEEDED)
         except Exception as e:
