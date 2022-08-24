@@ -42,8 +42,6 @@ connectionSpecification:
       title: Collection
       description: Settings for the Fauna Collection.
       required:
-        - name
-        - data_column
         - page_size
         - deletions
       properties:
