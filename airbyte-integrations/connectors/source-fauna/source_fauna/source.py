@@ -168,7 +168,12 @@ class SourceFauna(Source):
         return None
 
     def find_index_for_stream(self, collection: str) -> str:
-        # It's all bad
+        """
+        Finds the index for the given collection name. This will iterate over all indexes, and find
+        one that has the correct source, values, and terms.
+
+        :param collection: The name of the collection to search for.
+        """
         page = self.client.query(q.paginate(q.indexes()))
         while True:
             for id in page["data"]:
